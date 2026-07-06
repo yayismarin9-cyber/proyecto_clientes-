@@ -66,3 +66,21 @@ def eliminar_factura(id: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"mensaje": "Factura eliminada correctamente"}
+
+@router.get("/{id}/total")
+def calcular_total(id: int, db: Session = Depends(get_db)):
+
+    factura = db.query(Factura).filter(Factura.id == id).first()
+
+    if not factura:
+        raise HTTPException(status_code=404, detail="Factura no encontrada")
+
+    total = 0
+
+    for transaccion in factura.transacciones:
+        total += transaccion.valor_unitario * transaccion.cantidad
+
+    return {
+        "factura_id": factura.id,
+        "total": total
+    }
