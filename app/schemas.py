@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional, List
 
 
 # ==========================
@@ -23,11 +24,13 @@ class ClienteResponse(ClienteSchema):
 
 class FacturaSchema(BaseModel):
     fecha: str
-    cliente_id: int
+    cliente_id: Optional[int] = None
 
 
 class FacturaResponse(FacturaSchema):
     id: int
+    cliente: Optional[ClienteResponse] = None
+    transacciones: List["TransaccionResponse"] = []
 
     class Config:
         from_attributes = True

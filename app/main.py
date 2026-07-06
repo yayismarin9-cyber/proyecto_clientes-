@@ -2,9 +2,7 @@ from fastapi import FastAPI
 
 from app.database.database import Base, engine
 
-from app.models.cliente import Cliente
-from app.models.factura import Factura
-from app.models.transaccion import Transaccion
+from app.models import Cliente, Transaccion, Factura
 
 from app.routers import clientes, factura, transaccion
 
