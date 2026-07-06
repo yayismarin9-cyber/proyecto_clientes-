@@ -7,6 +7,8 @@ class Factura:
 
     def valor_total(self):
         total = 0
+
         for transaccion in self.lista_transacciones:
             total += transaccion.valor_unitario * transaccion.cantidad
+
         return total

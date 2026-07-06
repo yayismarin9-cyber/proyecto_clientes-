@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from app.models.transaccion import Transaccion
+from app.schemas import TransaccionSchema
 
 router = APIRouter(
     prefix="/transacciones",
@@ -15,14 +16,16 @@ def obtener_transacciones():
 
 
 @router.post("/")
-def crear_transaccion(
-    id: int,
-    valor_unitario: float,
-    cantidad: int,
-    factura_id: int
-):
-    transaccion = Transaccion(id, valor_unitario, cantidad, factura_id)
+def crear_transaccion(datos: TransaccionSchema):
+    transaccion = Transaccion(
+        datos.id,
+        datos.valor_unitario,
+        datos.cantidad,
+        datos.factura_id
+    )
+
     transacciones.append(transaccion.__dict__)
+
     return {
         "mensaje": "Transacción creada",
         "transaccion": transaccion.__dict__
@@ -30,15 +33,13 @@ def crear_transaccion(
 
 
 @router.put("/{id}")
-def actualizar_transaccion(
-    id: int,
-    valor_unitario: float,
-    cantidad: int
-):
+def actualizar_transaccion(id: int, datos: TransaccionSchema):
     for transaccion in transacciones:
         if transaccion["id"] == id:
-            transaccion["valor_unitario"] = valor_unitario
-            transaccion["cantidad"] = cantidad
+            transaccion["valor_unitario"] = datos.valor_unitario
+            transaccion["cantidad"] = datos.cantidad
+            transaccion["factura_id"] = datos.factura_id
+
             return {
                 "mensaje": "Transacción actualizada",
                 "transaccion": transaccion

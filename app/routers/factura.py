@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from app.models.factura import Factura
+from app.schemas import FacturaSchema
 
 router = APIRouter(
     prefix="/facturas",
@@ -15,19 +16,32 @@ def obtener_facturas():
 
 
 @router.post("/")
-def crear_factura(id: int, fecha: str, cliente: str):
-    factura = Factura(id, fecha, cliente)
+def crear_factura(datos: FacturaSchema):
+    factura = Factura(
+        datos.id,
+        datos.fecha,
+        datos.cliente
+    )
+
     facturas.append(factura.__dict__)
-    return {"mensaje": "Factura creada", "factura": factura.__dict__}
+
+    return {
+        "mensaje": "Factura creada",
+        "factura": factura.__dict__
+    }
 
 
 @router.put("/{id}")
-def actualizar_factura(id: int, fecha: str, cliente: str):
+def actualizar_factura(id: int, datos: FacturaSchema):
     for factura in facturas:
         if factura["id"] == id:
-            factura["fecha"] = fecha
-            factura["cliente"] = cliente
-            return {"mensaje": "Factura actualizada", "factura": factura}
+            factura["fecha"] = datos.fecha
+            factura["cliente"] = datos.cliente
+
+            return {
+                "mensaje": "Factura actualizada",
+                "factura": factura
+            }
 
     raise HTTPException(status_code=404, detail="Factura no encontrada")
 
