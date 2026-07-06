@@ -1,5 +1,14 @@
 from fastapi import FastAPI
+
+from app.database.database import Base, engine
+
+from app.models.cliente import Cliente
+from app.models.factura import Factura
+from app.models.transaccion import Transaccion
+
 from app.routers import clientes, factura, transaccion
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="API Facturación",
@@ -13,6 +22,4 @@ app.include_router(transaccion.router)
 
 @app.get("/")
 def inicio():
-    return {
-        "mensaje": "Bienvenido a la API de Facturación"
-    }
+    return {"mensaje": "Bienvenido a la API de Facturación"}

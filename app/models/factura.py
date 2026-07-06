@@ -1,14 +1,15 @@
-class Factura:
-    def __init__(self, id, fecha, cliente):
-        self.id = id
-        self.fecha = fecha
-        self.cliente = cliente
-        self.lista_transacciones = []
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
+from app.database.database import Base
 
-    def valor_total(self):
-        total = 0
 
-        for transaccion in self.lista_transacciones:
-            total += transaccion.valor_unitario * transaccion.cantidad
+class Factura(Base):
+    __tablename__ = "facturas"
 
-        return total
+    id = Column(Integer, primary_key=True, index=True)
+    fecha = Column(String, nullable=False)
+
+    cliente_id = Column(Integer, ForeignKey("clientes.id"))
+
+    cliente = relationship("Cliente", back_populates="facturas")
+    transacciones = relationship("Transaccion", back_populates="factura")
