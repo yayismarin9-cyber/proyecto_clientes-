@@ -54,3 +54,25 @@ def eliminar_factura(id: int):
             return {"mensaje": "Factura eliminada"}
 
     raise HTTPException(status_code=404, detail="Factura no encontrada")
+
+@router.get("/{id}/total")
+def obtener_total_factura(id: int):
+    for factura in facturas:
+        if factura["id"] == id:
+            total = 0
+
+            from app.routers.transaccion import transacciones
+
+            for transaccion in transacciones:
+                if transaccion["factura_id"] == id:
+                    total += (
+                        transaccion["valor_unitario"]
+                        * transaccion["cantidad"]
+                    )
+
+            return {
+                "factura": id,
+                "total": total
+            }
+
+    raise HTTPException(status_code=404, detail="Factura no encontrada")
