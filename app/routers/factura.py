@@ -1,78 +1,68 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+from app.database.database import get_db
 from app.models.factura import Factura
-from app.schemas import FacturaSchema
+from app.models.cliente import Cliente
+from app.schemas import FacturaSchema, FacturaResponse
 
 router = APIRouter(
     prefix="/facturas",
     tags=["Facturas"]
 )
 
-facturas = []
+
+@router.get("/", response_model=list[FacturaResponse])
+def obtener_facturas(db: Session = Depends(get_db)):
+    return db.query(Factura).all()
 
 
-@router.get("/")
-def obtener_facturas():
-    return facturas
+@router.post("/", response_model=FacturaResponse)
+def crear_factura(datos: FacturaSchema, db: Session = Depends(get_db)):
 
+    cliente = db.query(Cliente).filter(Cliente.id == datos.cliente_id).first()
 
-@router.post("/")
-def crear_factura(datos: FacturaSchema):
-    factura = Factura(
-        datos.id,
-        datos.fecha,
-        datos.cliente
+    if not cliente:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+
+    nueva_factura = Factura(
+        fecha=datos.fecha,
+        cliente_id=datos.cliente_id
     )
 
-    facturas.append(factura.__dict__)
+    db.add(nueva_factura)
+    db.commit()
+    db.refresh(nueva_factura)
 
-    return {
-        "mensaje": "Factura creada",
-        "factura": factura.__dict__
-    }
+    return nueva_factura
 
 
-@router.put("/{id}")
-def actualizar_factura(id: int, datos: FacturaSchema):
-    for factura in facturas:
-        if factura["id"] == id:
-            factura["fecha"] = datos.fecha
-            factura["cliente"] = datos.cliente
+@router.put("/{id}", response_model=FacturaResponse)
+def actualizar_factura(id: int, datos: FacturaSchema, db: Session = Depends(get_db)):
 
-            return {
-                "mensaje": "Factura actualizada",
-                "factura": factura
-            }
+    factura = db.query(Factura).filter(Factura.id == id).first()
 
-    raise HTTPException(status_code=404, detail="Factura no encontrada")
+    if not factura:
+        raise HTTPException(status_code=404, detail="Factura no encontrada")
+
+    factura.fecha = datos.fecha
+    factura.cliente_id = datos.cliente_id
+
+    db.commit()
+    db.refresh(factura)
+
+    return factura
 
 
 @router.delete("/{id}")
-def eliminar_factura(id: int):
-    for factura in facturas:
-        if factura["id"] == id:
-            facturas.remove(factura)
-            return {"mensaje": "Factura eliminada"}
+def eliminar_factura(id: int, db: Session = Depends(get_db)):
 
-    raise HTTPException(status_code=404, detail="Factura no encontrada")
+    factura = db.query(Factura).filter(Factura.id == id).first()
 
-@router.get("/{id}/total")
-def obtener_total_factura(id: int):
-    for factura in facturas:
-        if factura["id"] == id:
-            total = 0
+    if not factura:
+        raise HTTPException(status_code=404, detail="Factura no encontrada")
 
-            from app.routers.transaccion import transacciones
+    db.delete(factura)
+    db.commit()
 
-            for transaccion in transacciones:
-                if transaccion["factura_id"] == id:
-                    total += (
-                        transaccion["valor_unitario"]
-                        * transaccion["cantidad"]
-                    )
-
-            return {
-                "factura": id,
-                "total": total
-            }
-
-    raise HTTPException(status_code=404, detail="Factura no encontrada")
+    return {"mensaje": "Factura eliminada correctamente"}
